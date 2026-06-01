@@ -1,0 +1,21 @@
+{
+  "short_name": "RIBD",
+  "name": "RIBD App",
+  "icons": [
+    {
+      "src": "https://code-myst.github.io/ribd/icon.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://code-myst.github.io/ribd/icon.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/ribd/?install=true",
+  "background_color": "#0A0A0F",
+  "theme_color": "#0070f3",
+  "display": "standalone",
+  "orientation": "portrait"
+}
