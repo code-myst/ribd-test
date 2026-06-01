@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard</title>
+<link rel="icon" id="favicon" href=""/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+<style>
+/* ═══════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════ */
+:root {
+  --bg:       #0D0F14;
+  --surface:  #13161E;
+  --card:     #181C27;
+  --border:   rgba(255,255,255,.07);
+  --border2:  rgba(255,255,255,.12);
+  --ink:      #ECEEF5;
+  --muted:    #6B7280;
+  --soft:     #9CA3AF;
+  --primary:  #4361EE;
+  --primary2: #3A56E4;
+  --cyan:     #06D6A0;
+  --amber:    #FFB703;
+  --rose:     #FB5607;
+  --sidebar-w: 260px;
+  --top-h:    64px;
+  --font:     'Cabinet Grotesk', sans-serif;
+  --bn:       'Hind Siliguri', sans-serif;
+  --radius:   14px;
+  --shadow:   0 4px 24px rgba(0,0,0,.35);
+}
+
+/* ═══════════════════════════════════════
+   RESET
+═══════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+a { text-decoration: none; color: inherit; }
+button { font-family: var(--font); }
+img { display: block; }
+
+/* ═══════════════════════════════════════
+   LOADER
+═══════════════════════════════════════ */
+#pageLoader {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 1rem;
+  transition: opacity .4s, visibility .4s;
+}
+#pageLoader.gone { opacity: 0; visibility: hidden; }
+.ld-logo {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; font-weight: 800; color: #fff;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(.92); opacity: .7; }
+}
+.ld-bar {
+  width: 120px; height: 3px;
+  background: var(--border2); border-radius: 10px; overflow: hidden;
+}
+.ld-fill {
+  height: 100%; width: 40%;
+  background: var(--primary);
+  border-radius: 10px;
+  animation: slide 1.2s ease-in-out infinite;
+}
+@keyframes slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
+
+/* ═══════════════════════════════════════
+   LAYOUT SHELL
+═══════════════════════════════════════ */
+.shell { display: flex; min-height: 100vh; }
+
+/* ═══════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════ */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  height: 100vh; position: fixed;
+  top: 0; left: 0; z-index: 200;
+  display: flex; flex-direction: column;
+  padding: 0 0 1rem;
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+}
+
+/* brand */
+.sb-brand {
+  display: flex; align-items: center; gap: .75rem;
+  padding: 1.1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  min-height: var(--top-h);
+}
+.sb-brand-logo {
+  width: 36px; height: 36px; border-radius: 10px;
+  object-fit: cover; flex-shrink: 0;
+}
+.sb-brand-fallback {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--primary); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: .95rem; color: #fff;
+}
+.sb-brand-name {
+  font-size: .95rem; font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* nav items */
+.sb-nav { flex: 1; padding: 1rem .75rem; overflow-y: auto; }
+.sb-section-label {
+  font-size: .68rem; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--muted);
+  padding: .6rem .6rem .4rem;
+  margin-top: .6rem;
+}
+.sb-item {
+  display: flex; align-items: center; gap: .8rem;
+  padding: .65rem .9rem; border-radius: 10px;
+  font-size: .88rem; font-weight: 500; color: var(--soft);
+  cursor: pointer; transition: all .18s;
+  margin-bottom: 2px; border: none; background: none;
+  width: 100%; text-align: left;
+}
+.sb-item:hover { background: rgba(255,255,255,.05); color: var(--ink); }
+.sb-item.active {
+  background: rgba(67,97,238,.15);
+  color: var(--primary);
+  font-weight: 600;
+}
+.sb-item .sb-icon { font-size: 1rem; flex-shrink: 0; width: 20px; text-align: center; }
+.sb-badge {
+  margin-left: auto;
+  background: var(--rose); color: #fff;
+  font-size: .65rem; font-weight: 700;
+  padding: .15rem .45rem; border-radius: 20px;
+}
+
+/* user card at bottom */
+.sb-user {
+  margin: 0 .75rem .25rem;
+  padding: .85rem 1rem;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; display: flex; align-items: center; gap: .75rem;
+  cursor: pointer;
+}
+.sb-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--cyan));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: .85rem; flex-shrink: 0;
+}
+.sb-user-name { font-size: .82rem; font-weight: 600; line-height: 1.2; }
+.sb-user-role { font-size: .7rem; color: var(--muted); }
+.sb-logout-btn {
+  margin: 0 .75rem; padding: .55rem;
+  background: rgba(251,86,7,.1);
+  border: 1px solid rgba(251,86,7,.2);
+  color: #FB8C5A; border-radius: 10px;
+  font-size: .8rem; font-weight: 600; cursor: pointer;
+  transition: background .2s; width: calc(100% - 1.5rem);
+}
+.sb-logout-btn:hover { background: rgba(251,86,7,.2); }
+
+/* overlay (mobile) */
+.sb-overlay {
+  display: none; position: fixed; inset: 0; z-index: 199;
+  background: rgba(0,0,0,.55); backdrop-filter: blur(2px);
+}
+.sb-overlay.show { display: block; }
+
+/* ═══════════════════════════════════════
+   TOP BAR
+═══════════════════════════════════════ */
+.topbar {
+  position: fixed; top: 0;
+  left: var(--sidebar-w); right: 0; z-index: 100;
+  height: var(--top-h);
+  background: rgba(13,15,20,.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem;
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.menu-toggle {
+  display: none; background: none; border: none;
+  color: var(--ink); font-size: 1.3rem; cursor: pointer;
+  padding: .3rem;
+}
+.topbar-greeting { font-size: .9rem; font-weight: 500; color: var(--soft); }
+.topbar-greeting strong { color: var(--ink); }
+.topbar-right { display: flex; align-items: center; gap: .75rem; }
+.topbar-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--cyan));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: .85rem; cursor: pointer;
+}
+
+/* ═══════════════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════════════ */
+.main {
+  margin-left: var(--sidebar-w);
+  padding-top: var(--top-h);
+  min-height: 100vh;
+  flex: 1;
+}
+.content { padding: 2rem; max-width: 1200px; }
+
+/* page sections */
+.page { display: none; }
+.page.active { display: block; animation: fadeIn .3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ═══════════════════════════════════════
+   PAGE HEADER
+═══════════════════════════════════════ */
+.page-header { margin-bottom: 2rem; }
+.page-header h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: .3rem; }
+.page-header p { font-family: var(--bn); color: var(--muted); font-size: .88rem; }
+
+/* ═══════════════════════════════════════
+   STAT CARDS
+═══════════════════════════════════════ */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem; margin-bottom: 2rem;
+}
+.stat-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.4rem;
+  position: relative; overflow: hidden;
+  transition: border-color .2s, transform .2s;
+  animation: fadeIn .4s ease both;
+}
+.stat-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+.stat-card::before {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.stat-card.c1::before { background: var(--primary); }
+.stat-card.c2::before { background: var(--cyan); }
+.stat-card.c3::before { background: var(--amber); }
+.stat-card.c4::before { background: var(--rose); }
+.stat-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: .8rem; }
+.stat-label { font-size: .75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.stat-icon { font-size: 1.3rem; }
+.stat-value { font-size: 2.2rem; font-weight: 800; line-height: 1; }
+.stat-card.c1 .stat-value { color: var(--primary); }
+.stat-card.c2 .stat-value { color: var(--cyan); }
+.stat-card.c3 .stat-value { color: var(--amber); }
+.stat-card.c4 .stat-value { color: var(--rose); }
+.stat-sub { font-size: .75rem; color: var(--muted); margin-top: .3rem; font-family: var(--bn); }
+
+/* ═══════════════════════════════════════
+   SECTION TITLE ROW
+═══════════════════════════════════════ */
+.sec-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.2rem;
+}
+.sec-head h2 { font-size: 1.05rem; font-weight: 700; }
+.sec-head a, .sec-link {
+  font-size: .8rem; color: var(--primary); font-weight: 600; cursor: pointer;
+  background: none; border: none;
+}
+.sec-head a:hover, .sec-link:hover { text-decoration: underline; }
+
+/* ═══════════════════════════════════════
+   COURSE CARDS
+═══════════════════════════════════════ */
+.courses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.2rem; margin-bottom: 2.5rem;
+}
+.course-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  cursor: pointer; transition: border-color .2s, transform .2s, box-shadow .2s;
+  animation: fadeIn .4s ease both;
+}
+.course-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(67,97,238,.15);
+}
+.course-thumb {
+  height: 148px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+  font-size: 3.5rem;
+}
+.course-thumb::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(to bottom, transparent 40%, rgba(13,15,20,.6));
+}
+.course-thumb.g1 { background: linear-gradient(135deg,#1a1f35,#2d3561); }
+.course-thumb.g2 { background: linear-gradient(135deg,#0d2137,#0a4769); }
+.course-thumb.g3 { background: linear-gradient(135deg,#1a0d24,#3d1a52); }
+.course-thumb.g4 { background: linear-gradient(135deg,#0d1f1a,#0d4032); }
+.course-thumb.g5 { background: linear-gradient(135deg,#241a0d,#52380d); }
+.course-thumb.g6 { background: linear-gradient(135deg,#1f0d0d,#521a1a); }
+
+.course-body { padding: 1.2rem; }
+.course-tag {
+  display: inline-block;
+  background: rgba(67,97,238,.15); color: #818CF8;
+  border: 1px solid rgba(67,97,238,.2);
+  font-size: .68rem; font-weight: 700;
+  padding: .2rem .65rem; border-radius: 20px;
+  text-transform: uppercase; letter-spacing: .04em;
+  margin-bottom: .6rem;
+}
+.course-title {
+  font-size: .97rem; font-weight: 700;
+  line-height: 1.4; margin-bottom: .35rem;
+  display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+.course-meta {
+  font-size: .76rem; color: var(--muted);
+  font-family: var(--bn); margin-bottom: 1rem;
+  display: flex; align-items: center; gap: .5rem;
+}
+.course-meta span { display: flex; align-items: center; gap: .25rem; }
+
+/* progress */
+.progress-wrap { margin-bottom: .9rem; }
+.progress-top {
+  display: flex; justify-content: space-between;
+  font-size: .72rem; color: var(--muted); margin-bottom: .4rem;
+}
+.progress-bar {
+  height: 5px; background: var(--border2);
+  border-radius: 10px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; border-radius: 10px;
+  background: linear-gradient(90deg, var(--primary), var(--cyan));
+  transition: width .6s cubic-bezier(.4,0,.2,1);
+}
+
+.btn-card {
+  width: 100%; padding: .6rem;
+  border-radius: 9px; border: none; cursor: pointer;
+  font-size: .82rem; font-weight: 700;
+  font-family: var(--font); transition: all .18s;
+}
+.btn-continue {
+  background: rgba(67,97,238,.15);
+  color: #818CF8; border: 1px solid rgba(67,97,238,.25);
+}
+.btn-continue:hover { background: var(--primary); color: #fff; }
+.btn-enroll {
+  background: var(--primary); color: #fff;
+}
+.btn-enroll:hover { background: var(--primary2); transform: translateY(-1px); }
+.btn-done {
+  background: rgba(6,214,160,.1);
+  color: var(--cyan); border: 1px solid rgba(6,214,160,.2);
+  cursor: default;
+}
+
+/* ═══════════════════════════════════════
+   NOTICE BOARD
+═══════════════════════════════════════ */
+.notice-list { display: flex; flex-direction: column; gap: .8rem; }
+.notice-item {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1rem 1.25rem;
+  display: flex; gap: 1rem; align-items: flex-start;
+  transition: border-color .2s;
+  animation: fadeIn .4s ease both;
+}
+.notice-item:hover { border-color: var(--border2); }
+.notice-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--cyan); margin-top: .35rem; flex-shrink: 0;
+  box-shadow: 0 0 6px var(--cyan);
+}
+.notice-title { font-size: .9rem; font-weight: 600; margin-bottom: .25rem; }
+.notice-body { font-size: .8rem; color: var(--soft); font-family: var(--bn); margin-bottom: .3rem; }
+.notice-date { font-size: .72rem; color: var(--muted); }
+
+/* ═══════════════════════════════════════
+   EMPTY STATE
+═══════════════════════════════════════ */
+.empty {
+  text-align: center; padding: 3.5rem 2rem;
+  background: var(--card); border: 1px dashed var(--border2);
+  border-radius: var(--radius);
+}
+.empty-icon { font-size: 2.8rem; margin-bottom: .8rem; }
+.empty-title { font-size: .95rem; font-weight: 700; margin-bottom: .4rem; }
+.empty-desc { font-size: .82rem; color: var(--muted); font-family: var(--bn); }
+.empty-btn {
+  display: inline-block; margin-top: 1rem;
+  padding: .55rem 1.5rem;
+  background: var(--primary); color: #fff;
+  border-radius: 8px; font-size: .82rem; font-weight: 600;
+  cursor: pointer; border: none; font-family: var(--font);
+}
+
+/* ═══════════════════════════════════════
+   SKELETON LOADER
+═══════════════════════════════════════ */
+.skeleton {
+  background: linear-gradient(90deg, var(--card) 25%, rgba(255,255,255,.04) 50%, var(--card) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 8px;
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.sk-card {
+  height: 280px; border-radius: var(--radius);
+  background: var(--card); border: 1px solid var(--border); overflow: hidden;
+}
+.sk-thumb { height: 148px; background: linear-gradient(90deg, #181C27 25%, #1e2333 50%, #181C27 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+.sk-body { padding: 1.2rem; }
+.sk-line { height: 10px; border-radius: 6px; margin-bottom: .7rem; }
+.sk-line.w80 { width: 80%; }
+.sk-line.w60 { width: 60%; }
+.sk-line.w40 { width: 40%; }
+
+/* ═══════════════════════════════════════
+   ALL COURSES PAGE — search/filter
+═══════════════════════════════════════ */
+.search-bar {
+  display: flex; gap: .8rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+}
+.search-input-wrap { flex: 1; min-width: 200px; position: relative; }
+.search-input-wrap .icon {
+  position: absolute; left: .9rem; top: 50%;
+  transform: translateY(-50%); font-size: 1rem; color: var(--muted);
+}
+.search-input {
+  width: 100%; padding: .7rem 1rem .7rem 2.5rem;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--ink); font-size: .88rem;
+  font-family: var(--font); outline: none; transition: border-color .2s;
+}
+.search-input:focus { border-color: var(--primary); }
+.search-input::placeholder { color: var(--muted); }
+
+/* ═══════════════════════════════════════
+   MOBILE BOTTOM NAV
+═══════════════════════════════════════ */
+.bottom-nav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: .5rem 0 calc(.5rem + env(safe-area-inset-bottom));
+}
+.bnav-items { display: flex; }
+.bnav-item {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; gap: .2rem;
+  padding: .4rem; cursor: pointer; border: none;
+  background: none; color: var(--muted);
+  font-size: .62rem; font-family: var(--fn);
+  transition: color .18s;
+}
+.bnav-item.active { color: var(--primary); }
+.bnav-icon { font-size: 1.2rem; }
+
+/* ═══════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+═══════════════════════════════════════ */
+
+/* ── 1280px ── */
+@media (max-width: 1280px) {
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── 1024px ── */
+@media (max-width: 1024px) {
+  .content { padding: 1.5rem; }
+}
+
+/* ── 768px — tablet ── */
+@media (max-width: 768px) {
+  :root { --sidebar-w: 260px; }
+
+  /* sidebar hides off-screen */
+  .sidebar {
+    transform: translateX(-100%);
+    box-shadow: none;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 8px 0 32px rgba(0,0,0,.4);
+  }
+
+  /* topbar full width */
+  .topbar { left: 0; }
+
+  /* main no left margin */
+  .main { margin-left: 0; }
+
+  /* show hamburger */
+  .menu-toggle { display: flex; }
+
+  /* bottom nav appears */
+  .bottom-nav { display: block; }
+
+  /* extra bottom padding so content isn't under bottom nav */
+  .content { padding-bottom: 5rem; }
+
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .courses-grid { grid-template-columns: 1fr 1fr; }
+
+  .topbar-greeting { display: none; }
+}
+
+/* ── 520px — mobile ── */
+@media (max-width: 520px) {
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .stat-value { font-size: 1.7rem; }
+  .courses-grid { grid-template-columns: 1fr; }
+  .content { padding: 1rem 1rem 5rem; }
+  .topbar { padding: 0 1rem; }
+  .page-header h1 { font-size: 1.3rem; }
+}
+
+/* ── 360px ── */
+@media (max-width: 360px) {
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ──────── LOADER ──────── -->
+<div id="pageLoader">
+  <div class="ld-logo" id="loaderInitial">L</div>
+  <div class="ld-bar"><div class="ld-fill"></div></div>
+</div>
+
+<!-- ──────── SIDEBAR OVERLAY ──────── -->
+<div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
+
+<!-- ══════════════════════════════════
+     SIDEBAR
+══════════════════════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <img class="sb-brand-logo" id="sbLogoImg" src="" alt="" style="display:none"/>
+    <div class="sb-brand-fallback" id="sbLogoFallback">L</div>
+    <span class="sb-brand-name" id="sbAppName">LMS</span>
+  </div>
+
+  <nav class="sb-nav">
+    <div class="sb-section-label">Main</div>
+    <button class="sb-item active" data-page="home" onclick="goPage('home',this)">
+      <span class="sb-icon">🏠</span> ড্যাশবোর্ড
+    </button>
+    <button class="sb-item" data-page="all" onclick="goPage('all',this)">
+      <span class="sb-icon">📚</span> সব কোর্স
+    </button>
+    <button class="sb-item" data-page="my" onclick="goPage('my',this)">
+      <span class="sb-icon">📖</span> আমার কোর্স
+    </button>
+    <button class="sb-item" data-page="notices" onclick="goPage('notices',this)">
+      <span class="sb-icon">📢</span> নোটিশ বোর্ড
+      <span class="sb-badge" id="noticeBadge" style="display:none">!</span>
+    </button>
+  </nav>
+
+  <div class="sb-user">
+    <div class="sb-avatar" id="sbAvatarBottom">?</div>
+    <div>
+      <div class="sb-user-name" id="sbUserNameBottom">—</div>
+      <div class="sb-user-role">Student</div>
+    </div>
+  </div>
+  <button class="sb-logout-btn" onclick="doLogout()">🚪 Logout</button>
+</aside>
+
+<!-- ══════════════════════════════════
+     TOP BAR
+══════════════════════════════════ -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+    <div class="topbar-greeting">
+      স্বাগতম, <strong id="topGreetName">—</strong>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="topbar-avatar" id="topAvatar">?</div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════
+     MAIN CONTENT
+══════════════════════════════════ -->
+<main class="main">
+<div class="content">
+
+  <!-- ── HOME PAGE ── -->
+  <div class="page active" id="page-home">
+    <div class="page-header">
+      <h1 id="homeTitle">ড্যাশবোর্ড</h1>
+      <p id="homeSubtitle" style="font-family:var(--bn)">আজকে কী শিখবেন?</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stat-grid" id="statGrid">
+      <div class="stat-card c1">
+        <div class="stat-top">
+          <span class="stat-label">এনরোল্ড</span>
+          <span class="stat-icon">📚</span>
+        </div>
+        <div class="stat-value" id="sEnrolled">—</div>
+        <div class="stat-sub">কোর্সে ভর্তি</div>
+      </div>
+      <div class="stat-card c2">
+        <div class="stat-top">
+          <span class="stat-label">সম্পন্ন</span>
+          <span class="stat-icon">✅</span>
+        </div>
+        <div class="stat-value" id="sCompleted">—</div>
+        <div class="stat-sub">কোর্স শেষ</div>
+      </div>
+      <div class="stat-card c3">
+        <div class="stat-top">
+          <span class="stat-label">চলমান</span>
+          <span class="stat-icon">▶️</span>
+        </div>
+        <div class="stat-value" id="sInProgress">—</div>
+        <div class="stat-sub">কোর্স চলছে</div>
+      </div>
+      <div class="stat-card c4">
+        <div class="stat-top">
+          <span class="stat-label">মোট কোর্স</span>
+          <span class="stat-icon">🎯</span>
+        </div>
+        <div class="stat-value" id="sTotal">—</div>
+        <div class="stat-sub">প্ল্যাটফর্মে</div>
+      </div>
+    </div>
+
+    <!-- Continue Learning -->
+    <div class="sec-head">
+      <h2>📖 চালিয়ে যান</h2>
+      <button class="sec-link" onclick="goPage('my', document.querySelector('[data-page=my]'))">সব দেখুন →</button>
+    </div>
+    <div class="courses-grid" id="continueGrid">
+      <!-- skeleton -->
+      <div class="sk-card"><div class="sk-thumb skeleton"></div><div class="sk-body"><div class="sk-line w80 skeleton"></div><div class="sk-line w60 skeleton"></div><div class="sk-line w40 skeleton"></div></div></div>
+      <div class="sk-card"><div class="sk-thumb skeleton"></div><div class="sk-body"><div class="sk-line w80 skeleton"></div><div class="sk-line w60 skeleton"></div><div class="sk-line w40 skeleton"></div></div></div>
+    </div>
+
+    <!-- Recent Notices -->
+    <div class="sec-head">
+      <h2>📢 সাম্প্রতিক নোটিশ</h2>
+      <button class="sec-link" onclick="goPage('notices', document.querySelector('[data-page=notices]'))">সব দেখুন →</button>
+    </div>
+    <div class="notice-list" id="recentNotices">
+      <div class="sk-card" style="height:70px; border-radius:14px;" ><div class="sk-thumb skeleton" style="height:100%"></div></div>
+    </div>
+  </div>
+
+  <!-- ── ALL COURSES PAGE ── -->
+  <div class="page" id="page-all">
+    <div class="page-header">
+      <h1>📚 সব কোর্স</h1>
+      <p>যেকোনো কোর্সে এনরোল করুন</p>
+    </div>
+    <div class="search-bar">
+      <div class="search-input-wrap">
+        <span class="icon">🔍</span>
+        <input class="search-input" id="searchInput" placeholder="কোর্স খুঁজুন..." oninput="filterCourses()"/>
+      </div>
+    </div>
+    <div class="courses-grid" id="allCoursesGrid">
+      <div class="sk-card"><div class="sk-thumb skeleton"></div><div class="sk-body"><div class="sk-line w80 skeleton"></div><div class="sk-line w60 skeleton"></div></div></div>
+      <div class="sk-card"><div class="sk-thumb skeleton"></div><div class="sk-body"><div class="sk-line w80 skeleton"></div><div class="sk-line w60 skeleton"></div></div></div>
+      <div class="sk-card"><div class="sk-thumb skeleton"></div><div class="sk-body"><div class="sk-line w80 skeleton"></div><div class="sk-line w60 skeleton"></div></div></div>
+    </div>
+  </div>
+
+  <!-- ── MY COURSES PAGE ── -->
+  <div class="page" id="page-my">
+    <div class="page-header">
+      <h1>📖 আমার কোর্স</h1>
+      <p>আপনার এনরোল্ড কোর্সগুলো</p>
+    </div>
+    <div class="courses-grid" id="myCoursesGrid">
+      <div class="sk-card"><div class="sk-thumb skeleton"></div><div class="sk-body"><div class="sk-line w80 skeleton"></div></div></div>
+    </div>
+  </div>
+
+  <!-- ── NOTICES PAGE ── -->
+  <div class="page" id="page-notices">
+    <div class="page-header">
+      <h1>📢 নোটিশ বোর্ড</h1>
+      <p>সকল গুরুত্বপূর্ণ নোটিশ</p>
+    </div>
+    <div class="notice-list" id="allNotices">
+      <div class="sk-card" style="height:80px;border-radius:14px;"><div class="sk-thumb skeleton" style="height:100%"></div></div>
+    </div>
+  </div>
+
+</div>
+</main>
+
+<!-- ══════════════════════════════════
+     MOBILE BOTTOM NAV
+══════════════════════════════════ -->
+<nav class="bottom-nav">
+  <div class="bnav-items">
+    <button class="bnav-item active" data-page="home" onclick="goPage('home',this);setBnav(this)">
+      <span class="bnav-icon">🏠</span>হোম
+    </button>
+    <button class="bnav-item" data-page="all" onclick="goPage('all',this);setBnav(this)">
+      <span class="bnav-icon">📚</span>কোর্স
+    </button>
+    <button class="bnav-item" data-page="my" onclick="goPage('my',this);setBnav(this)">
+      <span class="bnav-icon">📖</span>আমার
+    </button>
+    <button class="bnav-item" data-page="notices" onclick="goPage('notices',this);setBnav(this)">
+      <span class="bnav-icon">📢</span>নোটিশ
+    </button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════
+     FIREBASE + APP LOGIC
+══════════════════════════════════ -->
+<script>
+/* ── Firebase init ───────────────────────── */
+const firebaseConfig = {
+  apiKey:            "AIzaSyASr8YY79XDVhrbczpr063r5QQ94Bnmi_o",
+  authDomain:        "codemyst-lms.firebaseapp.com",
+  projectId:         "codemyst-lms",
+  storageBucket:     "codemyst-lms.firebasestorage.app",
+  messagingSenderId: "470291342696",
+  appId:             "1:470291342596:web:22d22a0f0bbde813479c51"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+/* ── State ───────────────────────────────── */
+let currentUser = null;
+let userDoc     = null;
+let allCourses  = [];  // cache for search
+
+/* ── Boot ────────────────────────────────── */
+auth.onAuthStateChanged(async user => {
+  if (!user) { window.location.href = 'index.html'; return; }
+  currentUser = user;
+
+  /* load user doc */
+  const snap = await db.collection('users').doc(user.uid).get();
+  if (snap.exists) {
+    userDoc = snap.data();
+    if (userDoc.role === 'admin') { window.location.href = 'admin.html'; return; }
+  } else {
+    userDoc = { 
+      name: user.displayName || 'Student', 
+      email: user.email || '',
+      enrolledCourses: [], 
+      role: 'student',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    await db.collection('users').doc(user.uid).set(userDoc);
+  }
+
+  const name = userDoc.name || user.displayName || 'Student';
+  const initial = name.charAt(0).toUpperCase();
+
+  /* fill UI */
+  document.getElementById('topGreetName').textContent  = name.split(' ')[0];
+  document.getElementById('topAvatar').textContent     = initial;
+  document.getElementById('sbAvatarBottom').textContent = initial;
+  document.getElementById('sbUserNameBottom').textContent = name;
+
+  /* site settings */
+  await loadSiteSettings();
+
+  /* data */
+  await Promise.all([loadAllCourses(), loadNotices()]);
+  buildHomePage();
+
+  /* hide loader */
+  document.getElementById('pageLoader').classList.add('gone');
+});
+
+/* ── Site Settings ───────────────────────── */
+async function loadSiteSettings() {
+  try {
+    const snap = await db.collection('siteSettings').doc('main').get();
+    if (!snap.exists) return;
+    const s = snap.data();
+
+    const appName = s.appName || 'LMS';
+    document.getElementById('sbAppName').textContent     = appName;
+    document.getElementById('loaderInitial').textContent = appName.charAt(0).toUpperCase();
+    document.getElementById('sbLogoFallback').textContent = appName.charAt(0).toUpperCase();
+
+    if (s.logoUrl) {
+      const img = document.getElementById('sbLogoImg');
+      img.src = s.logoUrl; img.style.display = 'block';
+      document.getElementById('sbLogoFallback').style.display = 'none';
+    }
+    if (s.faviconUrl) document.getElementById('favicon').href = s.faviconUrl;
+    if (s.primaryColor) document.documentElement.style.setProperty('--primary', s.primaryColor);
+  } catch(e) { console.warn('Settings:', e); }
+}
+
+/* ── Load All Courses ────────────────────── */
+async function loadAllCourses() {
+  const snap = await db.collection('courses')
+    .where('published', '==', true)
+    .orderBy('createdAt', 'desc')
+    .get();
+  allCourses = [];
+  snap.forEach(doc => allCourses.push({ id: doc.id, ...doc.data() }));
+
+  /* stats */
+  const enrolled = userDoc.enrolledCourses || [];
+  document.getElementById('sTotal').textContent    = allCourses.length;
+  document.getElementById('sEnrolled').textContent = enrolled.length;
+
+  let completed = 0, inProgress = 0;
+  enrolled.forEach(cid => {
+    const c = allCourses.find(x => x.id === cid);
+    if (!c) return;
+    const prog = (c.progress && c.progress[currentUser.uid]) || 0;
+    if (prog >= 100) completed++;
+    else if (prog > 0) inProgress++;
+  });
+  document.getElementById('sCompleted').textContent  = completed;
+  document.getElementById('sInProgress').textContent = inProgress;
+
+  renderAllCourses(allCourses);
+}
+
+/* ── Render All Courses Grid ─────────────── */
+function renderAllCourses(courses) {
+  const enrolled = userDoc.enrolledCourses || [];
+  const grid = document.getElementById('allCoursesGrid');
+  if (!courses.length) {
+    grid.innerHTML = emptyState('📭', 'কোনো কোর্স নেই', 'এখনো কোনো কোর্স পাবলিশ হয়নি।');
+    return;
+  }
+  grid.innerHTML = courses.map((c, i) => courseCard(c, enrolled.includes(c.id), i)).join('');
+}
+
+/* ── Build Home Page ─────────────────────── */
+function buildHomePage() {
+  const enrolled = userDoc.enrolledCourses || [];
+  /* continue learning: enrolled courses */
+  const continueGrid = document.getElementById('continueGrid');
+  if (!enrolled.length) {
+    continueGrid.innerHTML = `<div class="empty">
+      <div class="empty-icon">📭</div>
+      <div class="empty-title">এখনো কোনো কোর্সে ভর্তি হননি</div>
+      <div class="empty-desc">কোর্স সেকশনে গিয়ে পছন্দের কোর্সে ভর্তি হন</div>
+      <button class="empty-btn" onclick="goPage('all',document.querySelector('[data-page=all]'))">কোর্স দেখুন →</button>
+    </div>`;
+    return;
+  }
+  const enrolledCourses = allCourses.filter(c => enrolled.includes(c.id)).slice(0, 4);
+  continueGrid.innerHTML = enrolledCourses.map((c, i) => courseCard(c, true, i)).join('');
+}
+
+/* ── Course Card HTML ────────────────────── */
+const gradients = ['g1','g2','g3','g4','g5','g6'];
+function courseCard(c, enrolled, idx = 0) {
+  const g   = gradients[idx % gradients.length];
+  const icon = c.icon || '📚';
+  const prog = enrolled ? ((c.progress && c.progress[currentUser.uid]) || 0) : 0;
+  const lessons = c.totalLessons || c.lessons || 0;
+
+  let btn = '';
+  if (!enrolled) {
+    btn = `<button class="btn-card btn-enroll" onclick="event.stopPropagation(); enrollCourse('${c.id}',this)">✅ এনরোল করুন</button>`;
+  } else if (prog >= 100) {
+    btn = `<button class="btn-card btn-done">✓ সম্পন্ন</button>`;
+  } else {
+    btn = `<button class="btn-card btn-continue" onclick="event.stopPropagation(); openCourse('${c.id}')">▶ চালিয়ে যান</button>`;
+  }
+
+  return `
+  <div class="course-card" onclick="openCourse('${c.id}')">
+    <div class="course-thumb ${g}">${icon}</div>
+    <div class="course-body">
+      <span class="course-tag">${c.category || 'General'}</span>
+      <div class="course-title">${c.title}</div>
+      <div class="course-meta">
+        <span>👨‍🏫 ${c.instructor || 'Admin'}</span>
+        <span>·</span>
+        <span>📹 ${lessons} লেসন</span>
+      </div>
+      ${enrolled ? `
+        <div class="progress-wrap">
+          <div class="progress-top">
+            <span>অগ্রগতি</span><span>${prog}%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:${prog}%"></div>
+          </div>
+        </div>` : ''}
+      ${btn}
+    </div>
+  </div>`;
+}
+
+/* ── My Courses ──────────────────────────── */
+function renderMyCourses() {
+  const enrolled = userDoc.enrolledCourses || [];
+  const grid = document.getElementById('myCoursesGrid');
+  const myCourses = allCourses.filter(c => enrolled.includes(c.id));
+  if (!myCourses.length) {
+    grid.innerHTML = `<div class="empty">
+      <div class="empty-icon">📖</div>
+      <div class="empty-title">কোনো কোর্সে ভর্তি নেই</div>
+      <div class="empty-desc">সব কোর্স সেকশনে গিয়ে পছন্দের কোর্সে ভর্তি হন।</div>
+      <button class="empty-btn" onclick="goPage('all',document.querySelector('[data-page=all]'))">কোর্স দেখুন →</button>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = myCourses.map((c, i) => courseCard(c, true, i)).join('');
+}
+
+/* ── Notices ─────────────────────────────── */
+async function loadNotices() {
+  const snap = await db.collection('notices').orderBy('date', 'desc').limit(20).get();
+  const notices = [];
+  snap.forEach(doc => notices.push({ id: doc.id, ...doc.data() }));
+
+  if (notices.length) {
+    document.getElementById('noticeBadge').style.display = 'inline';
+  }
+
+  /* recent 3 on home */
+  document.getElementById('recentNotices').innerHTML =
+    notices.slice(0, 3).map(noticeItem).join('') ||
+    `<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">কোনো নোটিশ নেই</div></div>`;
+
+  /* all notices page */
+  document.getElementById('allNotices').innerHTML =
+    notices.map(noticeItem).join('') ||
+    `<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">কোনো নোটিশ নেই</div></div>`;
+}
+
+function noticeItem(n) {
+  const date = n.date?.toDate?.().toLocaleDateString('bn-BD', { year:'numeric', month:'long', day:'numeric' }) || '';
+  return `
+  <div class="notice-item">
+    <div class="notice-dot"></div>
+    <div>
+      <div class="notice-title">${n.title}</div>
+      ${n.body ? `<div class="notice-body">${n.body}</div>` : ''}
+      <div class="notice-date">🗓 ${date}</div>
+    </div>
+  </div>`;
+}
+
+/* ── Enroll ──────────────────────────────── */
+async function enrollCourse(courseId, btn) {
+  if (!currentUser) return;
+  if (btn) { btn.disabled = true; btn.textContent = 'হচ্ছে...'; }
+  try {
+    await db.collection('users').doc(currentUser.uid).set({
+      enrolledCourses: firebase.firestore.FieldValue.arrayUnion(courseId)
+    }, { merge: true });
+    userDoc.enrolledCourses = [...(userDoc.enrolledCourses || []), courseId];
+
+    /* update stats */
+    document.getElementById('sEnrolled').textContent = userDoc.enrolledCourses.length;
+
+    /* re-render grids */
+    renderAllCourses(allCourses);
+    buildHomePage();
+    renderMyCourses();
+  } catch(e) {
+    alert('এনরোল করা যায়নি, আবার চেষ্টা করুন।');
+    if (btn) { btn.disabled = false; btn.textContent = '✅ এনরোল করুন'; }
+  }
+}
+
+/* ── Open Course ─────────────────────────── */
+function openCourse(id) {
+  window.location.href = 'course.html?id=' + id;
+}
+
+/* ── Search / Filter ─────────────────────── */
+function filterCourses() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  const filtered = q
+    ? allCourses.filter(c =>
+        c.title.toLowerCase().includes(q) ||
+        (c.category || '').toLowerCase().includes(q) ||
+        (c.instructor || '').toLowerCase().includes(q))
+    : allCourses;
+  renderAllCourses(filtered);
+}
+
+/* ── Page Navigation ─────────────────────── */
+function goPage(name, triggerEl) {
+  /* hide all pages */
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+
+  /* sidebar active */
+  document.querySelectorAll('.sb-item[data-page]').forEach(el => {
+    el.classList.toggle('active', el.dataset.page === name);
+  });
+
+  /* lazy render */
+  if (name === 'my')      renderMyCourses();
+  if (name === 'all')     renderAllCourses(allCourses);
+
+  /* close sidebar on mobile */
+  closeSidebar();
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* bottom nav sync */
+function setBnav(el) {
+  document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+/* ── Sidebar Toggle ──────────────────────── */
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sbOverlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sbOverlay').classList.remove('show');
+}
+
+/* ── Logout ──────────────────────────────── */
+function doLogout() {
+  if (confirm('Logout করবেন?')) {
+    auth.signOut().then(() => window.location.href = 'index.html');
+  }
+}
+
+/* ── Helpers ─────────────────────────────── */
+function emptyState(icon, title, desc) {
+  return `<div class="empty" style="grid-column:1/-1">
+    <div class="empty-icon">${icon}</div>
+    <div class="empty-title">${title}</div>
+    <div class="empty-desc">${desc}</div>
+  </div>`;
+}
+</script>
+</body>
+</html>
