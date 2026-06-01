@@ -3,17 +3,19 @@
   "name": "RIBD App",
   "icons": [
     {
-      "src": "https://code-myst.github.io/ribd/icon.png",
+      "src": "icon.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
-      "src": "https://code-myst.github.io/ribd/icon.png",
+      "src": "icon.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": "/ribd/?install=true",
+  "start_url": ".",
   "background_color": "#0A0A0F",
   "theme_color": "#0070f3",
   "display": "standalone",
