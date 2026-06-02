@@ -519,12 +519,13 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
 .notice-date  { font-size: .7rem; color: var(--muted); margin-top: .2rem; }
 
 /* ═══════════════════════════════════════
-   RESPONSIVE
+   RESPONSIVE (UPDATED & FIXED)
 ═══════════════════════════════════════ */
 @media (max-width: 1100px) {
   .stat-row { grid-template-columns: repeat(2,1fr); }
   .settings-grid { grid-template-columns: 1fr; }
 }
+
 @media (max-width: 900px) {
   .sidebar { transform: translateX(-100%); }
   .sidebar.open { transform: translateX(0); box-shadow: 12px 0 40px rgba(0,0,0,.5); }
@@ -532,17 +533,44 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
   .main  { margin-left: 0; }
   .hamburger { display: flex; }
 }
+
 @media (max-width: 640px) {
   .stat-row { grid-template-columns: 1fr 1fr; }
   .content { padding: 1rem; }
   .fg-row  { grid-template-columns: 1fr; }
-  .ph { flex-direction: column; }
-  table { font-size: .78rem; }
-  thead th, tbody td { padding: .6rem .7rem; }
+  .ph { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  .ph .btn { width: 100%; justify-content: center; } /* মোবাইলে অ্যাকশন বাটন ফুল-উইডথ হবে */
+  
+  /* 🚨 টেবিল ওভারফ্লো ফিক্স: স্ক্রিন ছোট হলে টেবিল ডানে-বামে স্ক্রল করবে, লেআউট ভাঙবে না */
+  .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  table { min-width: 600px; font-size: .8rem; } /* টেবিলের একটি মিনিমাম উইডথ নিশ্চিত করা হলো */
+  thead th, tbody td { padding: .7rem .8rem; }
+  
+  /* 🚨 মডাল ফিক্স: ছোট স্ক্রিনে মডাল যেন স্ক্রিনের দেয়ালে লেগে না যায় */
+  .modal {
+    padding: 1.25rem;
+    margin: 0 0.5rem;
+  }
+  .modal-footer { flex-direction: column-reverse; gap: 0.5rem; }
+  .modal-footer .btn { width: 100%; justify-content: center; }
 }
-@media (max-width: 420px) {
-  .stat-row { grid-template-columns: 1fr 1fr; }
-  .sc-val { font-size: 1.6rem; }
+
+@media (max-width: 480px) {
+  /* 🚨 স্ট্যাট কার্ড গ্রিড ফিক্স: খুব ছোট স্ক্রিনে ২ কলামে লেখা পপআপ করলে ১ কলামে নিয়ে আসা নিরাপদ */
+  .stat-row { grid-template-columns: 1fr; }
+  .sc-val { font-size: 1.8rem; }
+  
+  /* কোর্স রোর অ্যাকশন বাটনগুলো মোবাইলে নিচে নিচে সুন্দরভাবে সাজানোর জন্য */
+  .course-row-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem;
+  }
+  .course-row-actions .btn-rose { grid-column: span 2; justify-content: center; }
 }
 </style>
 </head>
