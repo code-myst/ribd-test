@@ -519,7 +519,7 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
 .notice-date  { font-size: .7rem; color: var(--muted); margin-top: .2rem; }
 
 /* ═══════════════════════════════════════
-   RESPONSIVE (UPDATED & FIXED)
+   RESPONSIVE (NO SCROLL & COMPACT OVERVIEW)
 ═══════════════════════════════════════ */
 @media (max-width: 1100px) {
   .stat-row { grid-template-columns: repeat(2,1fr); }
@@ -535,42 +535,82 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
 }
 
 @media (max-width: 640px) {
-  .stat-row { grid-template-columns: 1fr 1fr; }
   .content { padding: 1rem; }
   .fg-row  { grid-template-columns: 1fr; }
   .ph { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-  .ph .btn { width: 100%; justify-content: center; } /* মোবাইলে অ্যাকশন বাটন ফুল-উইডথ হবে */
+  .ph .btn { width: 100%; justify-content: center; }
   
-  /* 🚨 টেবিল ওভারফ্লো ফিক্স: স্ক্রিন ছোট হলে টেবিল ডানে-বামে স্ক্রল করবে, লেআউট ভাঙবে না */
-  .table-wrap {
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+  /* --------------------------------------------------
+     ১. ওভারভিউ (Stat Cards): এক লাইনে ৪টি ছোট ছোট বক্স
+     -------------------------------------------------- */
+  .stat-row { 
+    grid-template-columns: repeat(4, 1fr) !important; /* জোরপূর্বক এক লাইনে ৪টা */
+    gap: 0.3rem !important; /* স্পেস একদম কমিয়ে আনা হয়েছে */
   }
-  table { min-width: 600px; font-size: .8rem; } /* টেবিলের একটি মিনিমাম উইডথ নিশ্চিত করা হলো */
-  thead th, tbody td { padding: .7rem .8rem; }
+  .sc { 
+    padding: 0.5rem 0.25rem !important; 
+    border-radius: 8px !important;
+    text-align: center;
+  }
+  .sc::after { display: none !important; } /* মোবাইলে ব্যাকগ্রাউন্ড বড় ইমোজি হাইড */
+  .sc-val { font-size: 1rem !important; line-height: 1.2; }
+  .sc-label { font-size: 0.58rem !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; margin-bottom: 0.2rem !important; }
+  .sc-sub { display: none !important; } /* ছোট স্ক্রিনে নিচের সাবটাইটেল হাইড */
+
+  /* --------------------------------------------------
+     ২. নো-স্ক্রল টেবিল ফিক্স (টেবিল টু কার্ড কনভার্সন)
+     -------------------------------------------------- */
+  .table-wrap { overflow-x: visible !important; background: transparent !important; border: none !important; }
   
-  /* 🚨 মডাল ফিক্স: ছোট স্ক্রিনে মডাল যেন স্ক্রিনের দেয়ালে লেগে না যায় */
-  .modal {
-    padding: 1.25rem;
-    margin: 0 0.5rem;
+  /* টেবিলের স্ট্রাকচার লুকিয়ে ফেলা */
+  table, thead, tbody, th, td, tr { 
+    display: block; 
+    width: 100%; 
   }
+  
+  /* হেডার লুকিয়ে ফেলা */
+  thead { display: none; }
+  
+  /* প্রতিটি রো এখন একটি আলাদা কার্ড */
+  tbody tr {
+    background: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 12px !important;
+    margin-bottom: 0.8rem !important;
+    padding: 0.6rem 0.9rem !important;
+  }
+  
+  /* প্রতিটি সেল বা কলামের ডিজাইন */
+  tbody td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 0.5rem 0 !important;
+    border-bottom: 1px dashed var(--border) !important;
+    font-size: 0.85rem !important;
+    text-align: right !important;
+  }
+  
+  tbody td:last-child {
+    border-bottom: none !important;
+    justify-content: flex-end !important; /* বাটনগুলো ডানে থাকবে */
+    padding-top: 0.6rem !important;
+  }
+
+  /* 💡 গুরুত্বপূর্ণ: ডেটার বামপাশে লেবেল বসানোর ম্যাজিক */
+  tbody td::before {
+    content: attr(data-label); /* HTML এর data-label থেকে নাম নিবে */
+    font-weight: 600;
+    color: var(--soft);
+    float: left;
+    text-align: left;
+    font-size: 0.8rem;
+  }
+  
+  /* মডাল ফিক্স */
+  .modal { padding: 1.25rem; margin: 0 0.75rem; }
   .modal-footer { flex-direction: column-reverse; gap: 0.5rem; }
   .modal-footer .btn { width: 100%; justify-content: center; }
-}
-
-@media (max-width: 480px) {
-  /* 🚨 স্ট্যাট কার্ড গ্রিড ফিক্স: খুব ছোট স্ক্রিনে ২ কলামে লেখা পপআপ করলে ১ কলামে নিয়ে আসা নিরাপদ */
-  .stat-row { grid-template-columns: 1fr; }
-  .sc-val { font-size: 1.8rem; }
-  
-  /* কোর্স রোর অ্যাকশন বাটনগুলো মোবাইলে নিচে নিচে সুন্দরভাবে সাজানোর জন্য */
-  .course-row-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.4rem;
-  }
-  .course-row-actions .btn-rose { grid-column: span 2; justify-content: center; }
 }
 </style>
 </head>
@@ -658,7 +698,7 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
       </div>
     </div>
     <div class="stat-row">
-      <div class="sc a" data-icon="📚"><div class="sc-label">মোট কোর্স</div><div class="sc-val" id="dsCourses">—</div><div class="sc-sub">Published courses</div></div>
+      <div class="sc a" data-icon="📚"><div class="sc-label">মোট курс</div><div class="sc-val" id="dsCourses">—</div><div class="sc-sub">Published courses</div></div>
       <div class="sc b" data-icon="👥"><div class="sc-label">মোট শিক্ষার্থী</div><div class="sc-val" id="dsStudents">—</div><div class="sc-sub">Registered accounts</div></div>
       <div class="sc c" data-icon="📢"><div class="sc-label">নোটিশ</div><div class="sc-val" id="dsNotices">—</div><div class="sc-sub">Active notices</div></div>
       <div class="sc d" data-icon="📹"><div class="sc-label">মোট লেসন</div><div class="sc-val" id="dsLessons">—</div><div class="sc-sub">Video + PDF lessons</div></div>
@@ -1034,17 +1074,17 @@ function renderCoursesTable() {
   }
   tbody.innerHTML = allCourses.map(c => `
     <tr>
-      <td>
+      <td data-label="কোর্সের নাম">
         <div style="font-weight:600">${c.icon||'📚'} ${c.title}</div>
         <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">${c.description?.slice(0,55)||''}</div>
       </td>
-      <td><span class="badge badge-blue">${c.category||'General'}</span></td>
-      <td>
+      <td data-label="ক্যাটাগরি"><span class="badge badge-blue">${c.category||'General'}</span></td>
+      <td data-label="লেসন">
         <span style="font-weight:700;color:var(--cyan)">${c.totalLessons}</span>
         <span style="color:var(--muted);font-size:.75rem"> লেসন</span>
       </td>
-      <td><span class="badge ${c.published?'badge-green':'badge-gray'}">${c.published?'Published':'Draft'}</span></td>
-      <td>
+      <td data-label="স্ট্যাটাস"><span class="badge ${c.published?'badge-green':'badge-gray'}">${c.published?'Published':'Draft'}</span></td>
+      <td data-label="Action">
         <div class="course-row-actions">
           <button class="btn btn-ghost btn-sm" onclick="openEditCourse('${c.id}')">✏️ Edit</button>
           <button class="btn btn-ghost btn-sm" onclick="toggleLessons('${c.id}')">📹 লেসন</button>
@@ -1115,19 +1155,19 @@ function renderStudents(students, tbodyId, brief) {
 
     if (brief) return `
       <tr>
-        <td><span style="font-weight:600">${name}</span></td>
-        <td>${emailCell}</td>
-        <td><span class="badge badge-blue">${enrolled} কোর্স</span></td>
-        <td style="color:var(--muted);font-size:.78rem">${date}</td>
+        <td data-label="নাম"><span style="font-weight:600">${name}</span></td>
+        <td data-label="Email">${emailCell}</td>
+        <td data-label="এনরোল্ড"><span class="badge badge-blue">${enrolled} কোর্স</span></td>
+        <td data-label="তারিখ" style="color:var(--muted);font-size:.78rem">${date}</td>
       </tr>`;
     return `
       <tr>
-        <td><span style="font-weight:600">${name}</span></td>
-        <td>${emailCell}</td>
-        <td><span class="badge badge-blue">${enrolled}</span></td>
-        <td><span class="badge ${s.role==='admin'?'badge-amber':'badge-gray'}">${s.role||'student'}</span></td>
-        <td style="color:var(--muted);font-size:.78rem">${date}</td>
-        <td>
+        <td data-label="নাম"><span style="font-weight:600">${name}</span></td>
+        <td data-label="Email">${emailCell}</td>
+        <td data-label="এনরোল্ড কোর্স"><span class="badge badge-blue">${enrolled}</span></td>
+        <td data-label="Role"><span class="badge ${s.role==='admin'?'badge-amber':'badge-gray'}">${s.role||'student'}</span></td>
+        <td data-label="তারিখ" style="color:var(--muted);font-size:.78rem">${date}</td>
+        <td data-label="Action">
           ${s.role!=='admin'
             ? `<button class="btn btn-ghost btn-sm" onclick="makeAdmin('${s.id}')">Admin করুন</button>`
             : `<span style="color:var(--muted);font-size:.78rem">Admin</span>`}
@@ -1371,7 +1411,7 @@ async function saveCourse() {
       totalLessons: 0,
       createdAt:   firebase.firestore.FieldValue.serverTimestamp()
     });
-    toast('✅ কোর্স সেভ হয়েছে!','ok');
+    toast('✅ курс সেভ হয়েছে!','ok');
     closeModal('addCourse');
     document.getElementById('editCourseId').value = '';
     ['cTitle','cDesc','cCat','cInstructor','cIcon'].forEach(id => document.getElementById(id).value = '');
