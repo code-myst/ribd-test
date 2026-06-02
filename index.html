@@ -156,7 +156,24 @@ nav {
   max-width: 480px;
 }
 
-.hero-cta { display: flex; gap: 1rem; align-items: center; }
+/* ── দুই লাইনের রেসপনসিভ CTA গ্রিড ── */
+.hero-cta-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  max-width: 480px;
+  width: 100%;
+}
+.hero-cta-top {
+  display: flex;
+  gap: 0.8rem;
+  width: 100%;
+}
+.hero-cta-top a {
+  flex: 1;
+  text-align: center;
+  padding: .85rem 1rem;
+}
 .btn-primary {
   padding: .85rem 2.2rem;
   background: var(--ink); color: var(--paper);
@@ -177,6 +194,21 @@ nav {
   display: inline-block;
 }
 .btn-ghost:hover { border-color: var(--ink); transform: translateY(-2px); }
+
+/* ফুল-উইডথ ইনস্টল বাটন স্টাইল */
+.btn-install-full {
+  width: 100%;
+  text-align: center;
+  border: none;
+  font-family: inherit;
+  font-size: .95rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 10px;
+  padding: .85rem 2.2rem;
+  transition: background .2s, transform .2s;
+}
+.btn-install-full:hover { transform: translateY(-2px); filter: brightness(1.05); }
 
 .hero-stats {
   display: flex; gap: 2.5rem; margin-top: 3rem;
@@ -374,13 +406,17 @@ footer p { font-size: .82rem; color: var(--muted); font-family: var(--bn); }
     <p class="hero-desc" id="heroDesc">
       দক্ষ শিক্ষকদের সাথে অনলাইনে শিখুন। যেকোনো সময়, যেকোনো জায়গা থেকে।
     </p>
-    <div class="hero-cta">
-  <a href="#authCard" class="btn-primary" id="heroCta">শুরু করুন</a>
-  
-  <button class="btn-primary" id="btnInstallHero" style="display: none; background: var(--accent); color: var(--ink); border: none; padding: 0.85rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 8px; cursor: pointer; font-family: inherit;">অ্যাপ ডাউনলোড করুন</button>
-  
-  <a href="#features" class="btn-ghost">আরও জানুন</a>
-</div>
+    
+    <!-- ২ লাইনের রেসপনসিভ CTA সেকশন -->
+    <div class="hero-cta-group">
+      <div class="hero-cta-top">
+        <a href="#authCard" class="btn-primary" id="heroCta">শুরু করুন</a>
+        <a href="#features" class="btn-ghost">আরও জানুন</a>
+      </div>
+      <!-- নিচের লাইনে সমান চওড়া গোল্ডেন ডাউনলোড বাটন -->
+      <button class="btn-install-full" id="btnInstallHero" style="display: none; background: var(--accent); color: var(--ink);">অ্যাপ ডাউনলোড করুন</button>
+    </div>
+
     <div class="hero-stats" id="heroStats">
       <div class="stat-item"><div class="stat-val">500+</div><div class="stat-lbl">শিক্ষার্থী</div></div>
       <div class="stat-item"><div class="stat-val">20+</div><div class="stat-lbl">কোর্স</div></div>
@@ -436,7 +472,7 @@ footer p { font-size: .82rem; color: var(--muted); font-family: var(--bn); }
       <div class="auth-msg" id="regMsg"></div>
     </div>
   </div>
-</section>
+</section> Granger
 
 <!-- FEATURES -->
 <section class="features-section" id="features">
@@ -462,7 +498,7 @@ footer p { font-size: .82rem; color: var(--muted); font-family: var(--bn); }
       <div class="feat-card">
         <div class="feat-icon">🛡️</div>
         <div class="feat-title">সঠিক আকীদার প্রচার</div>
-        <div class="feat-desc">আহলুস সুন্নাহ ওয়াল জামাআর সঠিক আদর্শের ওপর ভিত্তি করে বিভ্রান্তি দূর করা এবং সমসাময়িক বিভিন্ন প্রশ্নের বুদ্ধিবৃত্তিক ও তাত্ত্বিক সমাধান প্রদান করা আমাদের অন্যতম লক্ষ্য।</div>
+        <div class="feat-desc">আهلুস সুন্নাহ ওয়াল জামাআর সঠিক আদর্শের ওপর ভিত্তি করে বিভ্রান্তি দূর করা এবং সমসাময়িক বিভিন্ন প্রশ্নের বুদ্ধিবৃত্তিক ও তাত্ত্বিক সমাধান প্রদান করা আমাদের অন্যতম লক্ষ্য।</div>
       </div>
     </div>
   </div>
