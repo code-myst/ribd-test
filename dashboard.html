@@ -319,16 +319,37 @@ img { display: block; }
   position: relative; overflow: hidden;
   font-size: 3.5rem;
 }
+/* gradient overlay — shows on both image and color thumbs */
 .course-thumb::after {
   content: ''; position: absolute; inset: 0;
-  background: linear-gradient(to bottom, transparent 40%, rgba(13,15,20,.6));
+  background: linear-gradient(to bottom, transparent 40%, rgba(13,15,20,.65));
+  pointer-events: none;
 }
+/* fallback gradient colors */
 .course-thumb.g1 { background: linear-gradient(135deg,#1a1f35,#2d3561); }
 .course-thumb.g2 { background: linear-gradient(135deg,#0d2137,#0a4769); }
 .course-thumb.g3 { background: linear-gradient(135deg,#1a0d24,#3d1a52); }
 .course-thumb.g4 { background: linear-gradient(135deg,#0d1f1a,#0d4032); }
 .course-thumb.g5 { background: linear-gradient(135deg,#241a0d,#52380d); }
 .course-thumb.g6 { background: linear-gradient(135deg,#1f0d0d,#521a1a); }
+/* real image thumbnail */
+.course-thumb img.thumb-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform .4s ease;
+}
+.course-card:hover .thumb-img { transform: scale(1.05); }
+/* category badge overlaid on thumb */
+.thumb-category {
+  position: absolute; bottom: .6rem; left: .7rem; z-index: 2;
+  background: rgba(13,15,20,.75);
+  backdrop-filter: blur(6px);
+  color: #818CF8; font-size: .65rem; font-weight: 700;
+  padding: .18rem .6rem; border-radius: 20px;
+  border: 1px solid rgba(67,97,238,.3);
+  text-transform: uppercase; letter-spacing: .05em;
+}
 
 .course-body { padding: 1.2rem; }
 .course-tag {
@@ -900,10 +921,15 @@ function buildHomePage() {
 /* ── Course Card HTML ────────────────────── */
 const gradients = ['g1','g2','g3','g4','g5','g6'];
 function courseCard(c, enrolled, idx = 0) {
-  const g   = gradients[idx % gradients.length];
-  const icon = c.icon || '📚';
+  const g    = gradients[idx % gradients.length];
   const prog = enrolled ? ((c.progress && c.progress[currentUser.uid]) || 0) : 0;
   const lessons = c.totalLessons || c.lessons || 0;
+
+  /* thumbnail: real image or fallback gradient+emoji */
+  const thumbContent = c.thumbnailUrl
+    ? `<img class="thumb-img" src="${c.thumbnailUrl}" alt="${c.title}" loading="lazy"/>
+       <span class="thumb-category">${c.category || 'General'}</span>`
+    : `📚<span class="thumb-category">${c.category || 'General'}</span>`;
 
   let btn = '';
   if (!enrolled) {
@@ -916,9 +942,8 @@ function courseCard(c, enrolled, idx = 0) {
 
   return `
   <div class="course-card" onclick="openCourse('${c.id}')">
-    <div class="course-thumb ${g}">${icon}</div>
+    <div class="course-thumb ${c.thumbnailUrl ? '' : g}">${thumbContent}</div>
     <div class="course-body">
-      <span class="course-tag">${c.category || 'General'}</span>
       <div class="course-title">${c.title}</div>
       <div class="course-meta">
         <span>👨‍🏫 ${c.instructor || 'Admin'}</span>
