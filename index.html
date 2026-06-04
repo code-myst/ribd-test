@@ -445,6 +445,9 @@ footer p { font-size: .82rem; color: var(--muted); font-family: var(--bn); }
         <input type="password" id="lPass" placeholder="password লিখুন"
                onkeydown="if(event.key==='Enter') doLogin()"/>
       </div>
+      <div style="text-align: right; margin-top: -8px; margin-bottom: 15px;">
+        <a href="javascript:void(0)" onclick="forgetPassword()" style="font-size: 0.82rem; color: var(--blue); text-decoration: none; font-family: var(--bn);">পাসওয়ার্ড ভুলে গেছেন?</a>
+      </div>
       <button class="btn-submit" id="btnLogin" onclick="doLogin()">Login করুন →</button>
       <div class="auth-msg" id="loginMsg"></div>
     </div>
@@ -674,6 +677,29 @@ async function doLogin() {
   }
 }
 
+// ── Forget Password ──────────────────────────────
+async function forgetPassword() {
+  const email = document.getElementById('lEmail').value.trim();
+  const msg   = document.getElementById('loginMsg');
+
+  if (!email) { 
+    showMsg(msg, 'err', '❌ আগে আপনার Email টি লিখুন, তারপর এখানে ক্লিক করুন'); 
+    return; 
+  }
+
+  try {
+    await auth.sendPasswordResetEmail(email);
+    showMsg(msg, 'ok', '✓ আপনার ইমেইলে পাসওয়ার্ড রিসেট লিংক পাঠানো হয়েছে। চেক করুন!');
+  } catch (e) {
+    let errMsg = '❌ কিছু সমস্যা হয়েছে, আবার চেষ্টা করুন';
+    if (e.code === 'auth/user-not-found') {
+      errMsg = '❌ এই email এ কোনো এককাউন্ট খুঁজে পাওয়া যায়নি';
+    } else if (e.code === 'auth/invalid-email') {
+      errMsg = '❌ Email টি সঠিক নয়';
+    }
+    showMsg(msg, 'err', errMsg);
+  }
+}
 // ── Register ─────────────────────────────────────
 async function doRegister() {
   const name  = document.getElementById('rName').value.trim();
